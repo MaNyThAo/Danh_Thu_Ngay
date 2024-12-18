@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Doanh Số</title>
+   <style>
+    body {
+    font-family: Arial, sans-serif;
+    background-image: url('https://example.com/background.jpg');
+    background-size: cover;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+form label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+form input, form button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+form button:hover {
+    background-color: #218838;
+}
+
+   </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Báo Cáo Doanh Số</h1>
+        <form id="report-form">
+            <label for="store-name">Tên Siêu Thị</label>
+            <input type="text" id="store-name" placeholder="Nhập tên siêu thị" required>
+
+            <label for="report-date">Ngày Báo Cáo</label>
+            <input type="date" id="report-date" required>
+
+            <label for="daily-sales">Doanh Số Ngày (VNĐ)</label>
+            <input type="number" id="daily-sales" placeholder="Nhập doanh số" required>
+
+            <label for="file-upload">Tải Lên File Excel</label>
+            <input type="file" id="file-upload" accept=".xlsx, .xls" required>
+
+            <button type="submit">Cập Nhật Báo Cáo</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        document.getElementById('report-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    // Lấy dữ liệu từ form
+    const storeName = document.getElementById('store-name').value;
+    const reportDate = document.getElementById('report-date').value;
+    const dailySales = document.getElementById('daily-sales').value;
+
+    if (!storeName || !reportDate || !dailySales) {
+        alert('Vui lòng điền đầy đủ thông tin!');
+        return;
+    }
+
+    // Đọc file Excel đã tải lên
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    if (!file) {
+        alert('Vui lòng chọn file Excel!');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // Chọn sheet đầu tiên
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Chuyển worksheet thành JSON
+        const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Thêm dữ liệu mới
+        sheetData.push([storeName, reportDate, dailySales]);
+
+        // Chuyển dữ liệu ngược lại thành worksheet
+        const updatedWorksheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+        // Ghi worksheet vào workbook
+        workbook.Sheets[sheetName] = updatedWorksheet;
+
+        // Xuất file Excel
+        XLSX.writeFile(workbook, 'Updated_Bao_Cao_Doanh_So.xlsx');
+        alert('Báo cáo đã được cập nhật thành công!');
+    };
+
+    reader.readAsArrayBuffer(file);
+});
+
+    </script>
+</body>
+</html>
